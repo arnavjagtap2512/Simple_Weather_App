@@ -9,10 +9,10 @@ load_dotenv()
 # Access the API key
 api_key = os.getenv("API_KEY")
 
-# Function to fetch weather data
-def fetch_weather_data(api_key, location):
+# Function to fetch real-time weather data
+def fetch_realtime_weather(api_key, location):
     # API URL and headers
-    url = f"https://api.tomorrow.io/v4/weather/forecast?location={location}&apikey={api_key}"
+    url = f"https://api.tomorrow.io/v4/weather/realtime?location={location}&apikey={api_key}"
     headers = {"accept": "application/json"}
 
     # Making the GET request to the API
@@ -21,39 +21,34 @@ def fetch_weather_data(api_key, location):
     # Parsing the JSON response
     if response.status_code == 200:
         data = response.json()
-        return data.get('timelines', {}).get('daily', [])
+        return data.get('data', {}).get('values', {})
     else:
         st.error(f"Failed to fetch data: {response.status_code}")
-        return []
+        return {}
 
 # Streamlit App
-st.title("Weather Forecast App")
+st.title("Real-Time Weather App")
 
 # Input fields for location
 location = st.text_input("Enter Location")
 
-# Fetch and display weather data when the button is clicked
-if st.button("Get Weather Forecast"):
-    daily_forecasts = fetch_weather_data(api_key, location)
+# Fetch and display real-time weather data when the button is clicked
+if st.button("Get Real-Time Weather"):
+    weather_data = fetch_realtime_weather(api_key, location)
 
-    if daily_forecasts:
-        # Display only the current day's forecast
-        current_forecast = daily_forecasts[0]
-        
-        if current_forecast:
-            date = current_forecast.get('time', 'N/A')
-            formatted_date = date.split('T')[0]
-            temperature_max = current_forecast.get('values', {}).get('temperatureMax', 'N/A')
-            temperature_min = current_forecast.get('values', {}).get('temperatureMin', 'N/A')
-            humidity_avg = current_forecast.get('values', {}).get('humidityAvg', 'N/A')
-            wind_speed_avg = current_forecast.get('values', {}).get('windSpeedAvg', 'N/A')
-            precipitation_probability = current_forecast.get('values', {}).get('precipitationProbabilityAvg', 'N/A')
+    if weather_data:
+        temperature = weather_data.get('temperature', 'N/A')
+        humidity = weather_data.get('humidity', 'N/A')
+        wind_speed = weather_data.get('windSpeed', 'N/A')
+        precipitation_probability = weather_data.get('precipitationProbability', 'N/A')
+        uv_index = weather_data.get('uvIndex', 'N/A')
+        visibility = weather_data.get('visibility', 'N/A')
 
-            st.subheader(f"Date: {formatted_date}")
-            st.write(f"Max Temperature: {temperature_max}°C")
-            st.write(f"Min Temperature: {temperature_min}°C")
-            st.write(f"Average Humidity: {humidity_avg}%")
-            st.write(f"Average Wind Speed: {wind_speed_avg} m/s")
-            st.write(f"Precipitation Probability: {precipitation_probability}%")
-        else:
-            st.error("No forecast data available.")
+        st.write(f"Temperature: {temperature}°C")
+        st.write(f"Humidity: {humidity}%")
+        st.write(f"Wind Speed: {wind_speed} m/s")
+        st.write(f"Precipitation Probability: {precipitation_probability}%")
+        st.write(f"UV Index: {uv_index}")
+        st.write(f"Visibility: {visibility} km")
+    else:
+        st.error("No real-time weather data available.")
